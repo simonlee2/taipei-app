@@ -8,6 +8,24 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
+var knex = require('knex')({
+  client:'pg',
+  connection: {
+    host: '127.0.0.1',
+    user: 'simon',
+    password: 'Wayla87091',
+    database: 'nyc',
+    charset: 'UTF-8'
+  }
+});
+
+var bookshelf = require('bookshelf')(knex);
+var st = require('knex-postgis')(knex);
+
+var NYC_Stations = bookshelf.Model.extend({
+  tableName: 'nyc_subway_stations'
+});
+
 var app = express();
 
 // view engine setup
@@ -24,6 +42,31 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
+
+app.use('/stations', function(req, res) {
+  NYC_Stations.collection().query((qb) => {
+    qb.select('name', st.x(st.transform('geom', 4326)).as('lat'), st.y(st.transform('geom', 4326)).as('long'));
+  })
+  .fetch()
+  .then((model) => {
+    res.send(model.toJSON());
+  })
+  .catch((error) => {
+    console.log(error);
+    res.send(error);
+  })
+
+
+  // new NYC_Neighborhoods().fetchAll({
+  //     columns: ['boroname', 'name', 'geom']
+  //   })
+  //   .then(function(neighborhoods) {
+  //     res.send(neighborhoods.toJSON())
+  //   }).catch(function(error) {
+  //     console.log(error);
+  //     res.send('An error occurred.');
+  //   });
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
