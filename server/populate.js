@@ -1,0 +1,78 @@
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+
+const getContent = function(options) {
+  // return new pending promise
+  return new Promise((resolve, reject) => {
+    // select http or https module, depending on reqested url
+    const lib = options.protocol === ('https:') ? https : http;
+    const request = lib.request(options, (response) => {
+      // handle http errors
+      if (response.statusCode < 200 || response.statusCode > 299) {
+         reject(new Error('Failed to load page, status code: ' + response.statusCode));
+       }
+      // temporary data holder
+      const body = [];
+      // on every content chunk, push it to the data array
+      response.on('data', (chunk) => {
+        body.push(chunk)
+      });
+      // we are done, resolve promise with those joined chunks
+      response.on('end', () => {
+        resolve(body.join(''))
+      });
+    });
+
+    // handle connection errors of the request
+    request.on('error', (err) => reject(err))
+    request.end();
+    })
+};
+
+const cafeOptions = {
+  "protocol": "https:",
+  "method": "GET",
+  "hostname": "cafenomad.tw",
+  "port": 443,
+  "path": "/api/v1.2/cafes/taipei",
+  "headers": {
+    "cache-control": "no-cache",
+    "postman-token": "512ba19f-c961-8467-12c8-dea0f372c5b2"
+  }
+};
+
+const cafeColumns = ['id', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longtitude'];
+
+function getJSON(options) {
+  return getContent(options)
+    .then((result) => JSON.parse(result))
+    .catch((err) => console.log(err));
+};
+
+function toCSV(json, columns, delimiter="|") {
+  output = json.map((entry) => {
+      values = columns.map((key) => {
+        return entry[key]
+      });
+      return values.join(delimiter);
+    }).join('\n');
+  return output;
+};
+
+function writeFilePromise(file, data, options={encoding:'utf8',mode:0o666,flag:'w'}) {
+  return new Promise((resolve, reject) => {
+      fs.writeFile(file, data, options, (err) => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      });
+  });
+};
+
+getJSON(cafeOptions)
+  .then((json) => toCSV(json, cafeColumns))
+  .then((csv) => writeFilePromise('cafes.csv', csv))
+  .then(() => console.log("Done."))
+  .catch((err) => console.log(err));
