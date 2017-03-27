@@ -1,6 +1,7 @@
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
+const knex = require('./database');
 
 const getContent = function(options) {
   // return new pending promise
@@ -42,13 +43,31 @@ const cafeOptions = {
   }
 };
 
-const cafeColumns = ['id', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longtitude'];
+const cafeColumns = ['id', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude'];
 
 function getJSON(options) {
   return getContent(options)
     .then((result) => JSON.parse(result))
     .catch((err) => console.log(err));
 };
+
+function maybeToNull(json) {
+  json.forEach((entry) => {
+      columns.forEach((key) => {
+        if (entry[key] === 'maybe') {
+          entry[key] = 'NULL';
+        }
+      });
+  });
+};
+
+function generatePoint(json) {
+  json.forEach((entry) => {
+    lat = entry['latitude'];
+    long = entry['longitude'];
+    entry['point'] = `ST_GeomFromText('Point(${lat} ${long})', 4326)`;
+  })
+}
 
 function toCSV(json, columns, delimiter="|") {
   output = json.map((entry) => {
@@ -57,7 +76,9 @@ function toCSV(json, columns, delimiter="|") {
       });
       return values.join(delimiter);
     }).join('\n');
-  return output;
+  header = ['uuid', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude']
+    .join(delimiter) + '\n';
+  return header + output;
 };
 
 function writeFilePromise(file, data, options={encoding:'utf8',mode:0o666,flag:'w'}) {
