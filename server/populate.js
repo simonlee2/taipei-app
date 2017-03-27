@@ -43,7 +43,7 @@ const cafeOptions = {
   }
 };
 
-const cafeColumns = ['id', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude'];
+const cafeColumns = ['id', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude', 'point'];
 
 function getJSON(options) {
   return getContent(options)
@@ -61,22 +61,28 @@ function maybeToNull(json) {
   });
 };
 
+function copyCafe() {
+    const query = "copy cafes (uuid, name, city, wifi, seat, quiet, tasty, cheap, music, url, address, limited_time, socket, standing_desk, latitude, longitude, point) from '/Users/simon/Dev/taipei-app/server/cafes.csv' delimiters '\t' csv header;";
+    return knex.raw(query);
+};
+
 function generatePoint(json) {
   json.forEach((entry) => {
     lat = entry['latitude'];
     long = entry['longitude'];
-    entry['point'] = `ST_GeomFromText('Point(${lat} ${long})', 4326)`;
+    entry['point'] = `SRID=4326;Point(${lat} ${long})`;
   })
+  return json
 }
 
-function toCSV(json, columns, delimiter="|") {
+function toCSV(json, columns, delimiter="\t") {
   output = json.map((entry) => {
       values = columns.map((key) => {
         return entry[key]
       });
       return values.join(delimiter);
     }).join('\n');
-  header = ['uuid', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude']
+  header = ['uuid', 'name', 'city', 'wifi', 'seat', 'quiet', 'tasty', 'cheap', 'music', 'url', 'address', 'limited_time', 'socket', 'standing_desk', 'latitude', 'longitude', 'point']
     .join(delimiter) + '\n';
   return header + output;
 };
@@ -93,7 +99,15 @@ function writeFilePromise(file, data, options={encoding:'utf8',mode:0o666,flag:'
 };
 
 getJSON(cafeOptions)
+  .then((json) => generatePoint(json))
   .then((json) => toCSV(json, cafeColumns))
   .then((csv) => writeFilePromise('cafes.csv', csv))
-  .then(() => console.log("Done."))
-  .catch((err) => console.log(err));
+  .then(() => copyCafe())
+  .then((resp) => {
+    console.log(resp);
+    knex.destroy();
+  })
+  .catch((err) => {
+    console.log(err);
+    knex.destroy();
+  });

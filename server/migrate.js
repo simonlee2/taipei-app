@@ -1,13 +1,4 @@
-var knex = require('knex')({
-    client: 'postgres',
-    connection: {
-        host     : 'localhost',
-        user     : 'simon',
-        password : 'Wayla87091',
-        database : 'nyc',
-        charset  : 'utf8'
-  }
-});
+var knex = require('./database');
 var Schema = require('./schema');
 
 function createTable(tableName) {
