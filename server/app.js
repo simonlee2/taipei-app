@@ -8,22 +8,17 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
-var knex = require('knex')({
-  client:'pg',
-  connection: {
-    host: '127.0.0.1',
-    user: 'simon',
-    password: 'Wayla87091',
-    database: 'nyc',
-    charset: 'UTF-8'
-  }
-});
-
+var knex = require('./database');
 var bookshelf = require('bookshelf')(knex);
 var st = require('knex-postgis')(knex);
+var util = require('./util');
 
 var NYC_Stations = bookshelf.Model.extend({
   tableName: 'nyc_subway_stations'
+});
+
+var Cafes = bookshelf.Model.extend({
+  tableName: 'cafes'
 });
 
 var app = express();
@@ -42,6 +37,46 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
+
+/*
+ * :point should be in form of @{lat},{long}
+ */
+app.use('/cafes/:point/:k', function(req, res) {
+  let point = req.params['point'];
+  let k = req.params['k'];
+  if (util.pointParamValid(point)) {
+    var [lat, long] = util.pointFromParam(point);
+    // res.send(`Requesting cafes around (${lat}, ${long})`);
+
+    /*
+    Form query:
+
+    select name, ST_Distance(
+      point,
+      'SRID=4326;Point(25.0376636 121.5618483)'
+    ) as distance
+    from cafes
+    order by
+      point <->
+      'SRID=4326;Point(25.0376636 121.5618483)'
+    limit 10;
+    */
+    Cafes.collection().query((qb) => {
+      let wkt = `Point(${lat} ${long})`;
+      qb.select('name', st.distance('point', st.geomFromText(wkt, 4326)).as('distance')).from('cafes').orderByRaw(`point <-> 'SRID=4326;Point(${lat} ${long})'`).limit(k)
+    })
+    .fetch()
+    .then((model) => {
+      res.send(model.toJSON());
+    })
+    .catch((error) => {
+      console.log(error);
+      res.send(error);
+    });
+  } else {
+    res.send(`Invalid point parameter ${point}`);
+  }
+});
 
 app.use('/stations', function(req, res) {
   NYC_Stations.collection().query((qb) => {
