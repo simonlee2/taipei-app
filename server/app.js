@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
+var test = require('./routes/test');
 
 var knex = require('./database');
 var bookshelf = require('bookshelf')(knex);
@@ -37,6 +38,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
+app.use('/test', test);
 
 /*
  * :point should be in form of @{lat},{long}

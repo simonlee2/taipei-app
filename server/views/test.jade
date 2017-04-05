@@ -1,0 +1,40 @@
+html
+    head
+        link(rel='stylesheet', href='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css')
+        link(rel='stylesheet', href='javascripts/codemirror-5.25.0/lib/codemirror.css')
+        script(src='javascripts/codemirror-5.25.0/lib/codemirror.js')
+        script(src='javascripts/codemirror-5.25.0/mode/sql/sql.js')
+        style(type='text/css').
+          .CodeMirror {
+            border:1px solid black;
+            flex:1;
+          }
+    body
+        #wrapper(style='display: flex; flex-flow:row; min-height: 100%;')
+          #map(style='display: inherit; flex: 7; flex-flow: column; min-width: 70%;')
+          #text(style='display: inherit; flex: 3; flex-flow: column; max-width: 30%;')
+            textarea#code(name='code', style='flex: 1;')
+            textarea(style='display: inherit; flex: 1;')
+
+        script(src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js')
+
+        script.
+            window.onload = function() {
+              window.editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+                mode: 'text/x-pgsql',
+                indentWithTabs: true,
+                smartIndent: true,
+                lineNumbers: true,
+                matchBrackets : true,
+                autofocus: true,
+                extraKeys: {"Ctrl-Space": "autocomplete"},
+                hintOptions: {tables: {
+                  users: {name: null, score: null, birthDate: null},
+                  countries: {name: null, population: null, size: null}
+                }}
+              });
+            }
+
+        script.
+            var map = L.map("map").setView([51.505, -0.09], 13);
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map)
