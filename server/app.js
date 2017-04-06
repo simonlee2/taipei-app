@@ -123,31 +123,6 @@ app.use('/cafes/:point/:k', function(req, res) {
   }
 });
 
-app.use('/stations', function(req, res) {
-  NYC_Stations.collection().query((qb) => {
-    qb.select('name', st.x(st.transform('geom', 4326)).as('lat'), st.y(st.transform('geom', 4326)).as('long'));
-  })
-  .fetch()
-  .then((model) => {
-    res.send(model.toJSON());
-  })
-  .catch((error) => {
-    console.log(error);
-    res.send(error);
-  })
-
-
-  // new NYC_Neighborhoods().fetchAll({
-  //     columns: ['boroname', 'name', 'geom']
-  //   })
-  //   .then(function(neighborhoods) {
-  //     res.send(neighborhoods.toJSON())
-  //   }).catch(function(error) {
-  //     console.log(error);
-  //     res.send('An error occurred.');
-  //   });
-});
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
