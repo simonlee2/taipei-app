@@ -13,6 +13,7 @@ var knex = require('./database');
 var bookshelf = require('bookshelf')(knex);
 var st = require('knex-postgis')(knex);
 var util = require('./util');
+var dbgeo = require('dbgeo');
 
 var NYC_Stations = bookshelf.Model.extend({
   tableName: 'nyc_subway_stations'
@@ -39,6 +40,49 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 app.use('/test', test);
+
+/*
+ * Grab SQL query from URL parameter `q`
+ */
+app.use('/sql', function(req, res) {
+  var sql = req.query.q;
+  console.log(`Executing SQL: ${sql}`);
+
+  function dbGeoParse(data) {
+    return new Promise(function (resolve, reject) {
+      dbgeo.parse(data, {
+        outputFormat: 'geojson',
+        geometryColumn: 'point',
+        geometryType: 'wkb'
+      }, function (err, result) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  function swapLatLng(json) {
+    json['features'].forEach((feature) => {
+      [lng, lat] = feature.geometry.coordinates;
+      feature.geometry.coordinates = [lat, lng];
+    })
+    return json
+  }
+
+  knex.raw(sql)
+    .then((resp) => dbGeoParse(resp['rows']))
+    .then((json) => swapLatLng(json))
+    .then((output) => {
+      res.send(output)
+    })
+    .catch((err) => {
+      console.log(err);
+      res.send(err);
+    });
+});
 
 /*
  * :point should be in form of @{lat},{long}
