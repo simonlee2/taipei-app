@@ -44,10 +44,14 @@ html
             }
             
         script.
+          var center =  L.latLng(25.0419989,121.5465422);
+          var radius = 600;
           var layer; // marker layer
-          var map = L.map("map").setView([25.0419989,121.5655422], 15);
+          var map = L.map("map").setView(center, 15);
           
           L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map)
+          L.marker(center).addTo(map).bindPopup("Center").openPopup();
+          L.circle(center, radius).addTo(map);
           function onLocationFound(e) {
             var radius = e.accuracy / 2;
             L.marker(e.latlng).addTo(map)
@@ -73,6 +77,7 @@ html
             fetch('http://localhost:3000/sql?q=' + query)
               .then(res => res.json())
               .then((out) => {
+                console.log(out);
                 addLayer(out);
               })
               .catch((err) => {
@@ -86,7 +91,9 @@ html
             //- features['features'].forEach((feature) => console.log(feature.geometry.coordinates));
             layer = L.geoJson(features, {
               pointToLayer: function(feature, latlng) {
-                return L.marker(latlng);
+                return L.marker(latlng, {
+                  title: latlng.distanceTo(center)
+                });
               },
               onEachFeature: function(feature, layer) {
                 layer.bindPopup(feature.properties.name);
