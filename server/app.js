@@ -9,11 +9,7 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var test = require('./routes/test');
 var cafes = require('./routes/cafes');
-
-var knex = require('./database');
-var bookshelf = require('bookshelf')(knex);
-var st = require('knex-postgis')(knex);
-var dbgeo = require('dbgeo');
+var sql = require('./routes/sql');
 
 var app = express();
 
@@ -41,36 +37,7 @@ app.use('/cafes', cafes);
 /*
  * Grab SQL query from URL parameter `q`
  */
-app.use('/sql', function(req, res) {
-  var sql = req.query.q;
-  console.log(`Executing SQL: ${sql}`);
-
-  function dbGeoParse(data) {
-    return new Promise(function (resolve, reject) {
-      dbgeo.parse(data, {
-        outputFormat: 'geojson',
-        geometryColumn: 'point',
-        geometryType: 'wkb'
-      }, function (err, result) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
-  }
-
-  knex.raw(sql)
-    .then((resp) => dbGeoParse(resp['rows']))
-    .then((output) => {
-      res.send(output)
-    })
-    .catch((err) => {
-      console.log(err);
-      res.send(err);
-    });
-});
+app.use('/sql', sql);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
