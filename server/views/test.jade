@@ -44,7 +44,9 @@ html
             }
             
         script.
+          var layer; // marker layer
           var map = L.map("map").setView([25.0419989,121.5655422], 15);
+          
           L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map)
           function onLocationFound(e) {
             var radius = e.accuracy / 2;
@@ -59,6 +61,11 @@ html
           }
           
           function send() {
+            // Clear layers if necessary
+            if( map.hasLayer(layer)) {
+              layer.clearLayers();
+            }
+            
             // Grab query from #code
             query = encodeURIComponent(window.editor.getValue());
             
@@ -77,7 +84,7 @@ html
           function addLayer(features) {
             //create an L.geoJson layer, add it to the map
             //- features['features'].forEach((feature) => console.log(feature.geometry.coordinates));
-            var layer = L.geoJson(features, {
+            layer = L.geoJson(features, {
               pointToLayer: function(feature, latlng) {
                 return L.marker(latlng);
               },
