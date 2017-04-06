@@ -18,95 +18,12 @@ html
               from cafes
               order by
                 point <->
-                'SRID=4326;Point(25.0376636 121.5618483)'
+                'SRID=4326;Point(121.5465422 25.0419989)'
               limit 10;
             #result(style='display: inherit; flex: 1; flex-flow: column; justify-content: center; ')
               button#send(style='display: inherit; flex: 1;', onclick='send()') Send
               textarea(style='display: inherit; flex: 9;')
 
         script(src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js')
-
-        script.
-            window.onload = function() {
-              window.editor = CodeMirror.fromTextArea(document.getElementById('code'), {
-                mode: 'text/x-pgsql',
-                indentWithTabs: true,
-                smartIndent: true,
-                lineNumbers: true,
-                matchBrackets : true,
-                autofocus: true,
-                extraKeys: {"Ctrl-Space": "autocomplete"},
-                hintOptions: {tables: {
-                  users: {name: null, score: null, birthDate: null},
-                  countries: {name: null, population: null, size: null}
-                }}
-              });
-            }
-            
-        script.
-          var center =  L.latLng(25.0419989,121.5465422);
-          var radius = 600;
-          var layer; // marker layer
-          var map = L.map("map").setView(center, 15);
-          
-          L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'}).addTo(map)
-          L.marker(center).addTo(map).bindPopup("Center").openPopup();
-          L.circle(center, radius).addTo(map);
-          function onLocationFound(e) {
-            var radius = e.accuracy / 2;
-            L.marker(e.latlng).addTo(map)
-            .bindPopup("You are within " + radius + " meters from this point").openPopup();
-            
-            L.circle(e.latlng, radius).addTo(map);
-          }
-          
-          function onLocationError(e) {
-            alert(e.message);
-          }
-          
-          function send() {
-            // Clear layers if necessary
-            if( map.hasLayer(layer)) {
-              layer.clearLayers();
-            }
-            
-            // Grab query from #code
-            query = encodeURIComponent(window.editor.getValue());
-            
-            // Get result using endpoing /sql?q=
-            fetch('http://localhost:3000/sql?q=' + query)
-              .then(res => res.json())
-              .then((out) => {
-                console.log(out);
-                addLayer(out);
-              })
-              .catch((err) => {
-                console.log(err);
-              })
-            // Update map using result
-          }
-          
-          function addLayer(features) {
-            //create an L.geoJson layer, add it to the map
-            //- features['features'].forEach((feature) => console.log(feature.geometry.coordinates));
-            layer = L.geoJson(features, {
-              pointToLayer: function(feature, latlng) {
-                return L.marker(latlng, {
-                  title: latlng.distanceTo(center)
-                });
-              },
-              onEachFeature: function(feature, layer) {
-                layer.bindPopup(feature.properties.name);
-              }
-            }).addTo(map)
-            map.fitBounds(layer.getBounds());
-          }
-          
-          function updateMap() {
-            
-          }
-          
-          map.on('locationfound', onLocationFound);
-          map.on('locationerror', onLocationError);
-          
-          map.locate({setView: true, maxZoom: 16});
+        script(src='javascripts/editor.js')
+        script(src='javascripts/test.js')
