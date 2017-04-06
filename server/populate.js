@@ -70,7 +70,7 @@ function generatePoint(json) {
   json.forEach((entry) => {
     lat = entry['latitude'];
     long = entry['longitude'];
-    entry['point'] = `SRID=4326;Point(${lat} ${long})`;
+    entry['point'] = `SRID=4326;Point(${long} ${lat})`;
   })
   return json
 }

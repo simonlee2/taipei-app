@@ -74,7 +74,6 @@ app.use('/sql', function(req, res) {
 
   knex.raw(sql)
     .then((resp) => dbGeoParse(resp['rows']))
-    .then((json) => swapLatLng(json))
     .then((output) => {
       res.send(output)
     })
