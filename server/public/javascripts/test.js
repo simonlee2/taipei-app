@@ -1,7 +1,7 @@
 var center =  L.latLng(25.0419989,121.5465422);
 var radius = 600;
 var zoom = 15;
-var layer; // marker layer
+var layers = []; // marker layers
 var map = L.map("map").setView(center, zoom);
 
 addTileLayer(map);
@@ -18,7 +18,7 @@ function addCenterMarker(map, center, radius) {
 }
 
 function onLocationFound(e) {
-  var accuracyRadius = e.accuracy / 2;
+  let accuracyRadius = e.accuracy / 2;
   L.marker(e.latlng).addTo(map)
   .bindPopup("You are within " + accuracyRadius + " meters from this point").openPopup();
 
@@ -38,23 +38,28 @@ function listenForLocation(map) {
 
 function send() {
   // Clear layers if necessary
-  if( map.hasLayer(layer)) {
-    layer.clearLayers();
-  }
+  layers.forEach((layer) => {
+    if( map.hasLayer(layer)) {
+      layer.clearLayers();
+    }
+  });
+
+  // Remove all layers for now
+  layers = [];
 
   // Grab query from #code
-  query = encodeURIComponent(window.editor.getValue());
+  let query = encodeURIComponent(window.editor.getValue());
 
   // Get result using endpoing /sql?q=
   fetch('http://localhost:3000/sql?q=' + query)
     .then(res => res.json())
-    .then((out) => addLayer(map, layer, out))
+    .then((out) => addLayer(map, out))
     .catch((err) => console.log(err))
 }
 
-function addLayer(map, layer, features) {
+function addLayer(map, features) {
   //create an L.geoJson layer, add it to the map
-  layer = L.geoJson(features, {
+  let layer = L.geoJson(features, {
     pointToLayer: function(feature, latlng) {
       return L.marker(latlng, {
         title: latlng.distanceTo(center)
@@ -64,5 +69,6 @@ function addLayer(map, layer, features) {
       layer.bindPopup(feature.properties.name);
     }
   }).addTo(map)
+  layers.push(layer);
   map.fitBounds(layer.getBounds());
 }
