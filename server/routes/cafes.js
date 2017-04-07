@@ -13,9 +13,9 @@ var Cafes = bookshelf.Model.extend({
 router.get('/:point/:k', function(req, res, next) {
   let point = req.params['point'];
   let k = req.params['k'];
-  console.log(req.params);
+
   if (util.pointParamValid(point)) {
-    var [lat, long] = util.pointFromParam(point);
+    var [lat, lng] = util.pointFromParam(point);
     // res.send(`Requesting cafes around (${lat}, ${long})`);
 
     /*
@@ -31,21 +31,43 @@ router.get('/:point/:k', function(req, res, next) {
       'SRID=4326;Point(25.0376636 121.5618483)'
     limit 10;
     */
-    Cafes.collection().query((qb) => {
-      let wkt = `Point(${lat} ${long})`;
-      qb.select('name', st.distance('point', st.geomFromText(wkt, 4326)).as('distance')).from('cafes').orderByRaw(`point <-> 'SRID=4326;Point(${lat} ${long})'`).limit(k)
+
+  //   Cafes.collection().query((qb) => {
+  //     let wkt = `Point(${lng} ${lat})`;
+  //     qb.select(
+  //       'name',
+  //       st.distance(st.geography('point'), st.geography(st.geomFromText(wkt, 4326))).as('distance')
+  //     )
+  //     .from('cafes')
+  //     .orderByRaw(`point <-> 'SRID=4326;${wkt}'`)
+  //     .limit(k)
+  //   })
+  //   .fetch()
+  //   .then((model) => {
+  //     console.log(model);
+  //     res.send(model.toJSON());
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //     res.send(error);
+  //   });
+    let wkt = `Point(${lng} ${lat})`;
+    knex.select('name', 'point', st.distance(st.geography('point'), st.geography(st.geomFromText(wkt, 4326))).as('distance'))
+    .from('cafes')
+    .orderByRaw(`point <-> 'SRID=4326;${wkt}'`)
+    .limit(k)
+    .then((data) => util.dbGeoParse(data))
+    .then((output) => {
+      console.log(output)
+      res.send(output)
     })
-    .fetch()
-    .then((model) => {
-      res.send(model.toJSON());
+    .catch((err) => {
+      res.send(err);
     })
-    .catch((error) => {
-      console.log(error);
-      res.send(error);
-    });
   } else {
     res.send(`Invalid point parameter ${point}`);
   }
+
 });
 
 module.exports = router;

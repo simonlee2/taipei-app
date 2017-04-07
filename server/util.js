@@ -1,3 +1,5 @@
+var dbgeo = require('dbgeo');
+
 function pointParamValid(paramString) {
   // paramString = @{lat},{long}
   let regex = /[-\d.]+/gi;
@@ -11,7 +13,24 @@ function pointFromParam(paramString) {
   return paramString.match(regex);
 };
 
+function dbGeoParse(data) {
+  return new Promise(function (resolve, reject) {
+    dbgeo.parse(data, {
+      outputFormat: 'geojson',
+      geometryColumn: 'point',
+      geometryType: 'wkb'
+    }, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
+
 module.exports = {
   pointParamValid,
-  pointFromParam
+  pointFromParam,
+  dbGeoParse
 }
