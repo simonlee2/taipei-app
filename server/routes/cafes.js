@@ -19,7 +19,6 @@ function getAllPoints(tableName) {
     .from(tableName)
     .then((data) => util.dbGeoParse(data))
     .then((output) => {
-      console.log(output)
       res.send(output)
     })
     .catch((err) => {
@@ -62,7 +61,6 @@ function getKNearestPoints(tableName) {
     .limit(k)
     .then((data) => util.dbGeoParse(data))
     .then((output) => {
-      console.log(output)
       res.send(output)
     })
     .catch((err) => {
@@ -109,7 +107,6 @@ function withinRadiusPoints(tableName) {
     .where(st.dwithin(geogPoint, geogWkt, radius))
     .then((data) => util.dbGeoParse(data))
     .then((output) => {
-      console.log(output)
       res.send(output)
     })
     .catch((err) => {
