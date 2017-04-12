@@ -1,0 +1,24 @@
+version: '2'
+
+services:
+
+    db:
+        build: db
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: simon
+            POSTGRES_USER: Wayla87091
+            POSTGRES_DB: nyc
+        volumes:
+            - ./db/sql:/docker-entrypoint-initdb.d/
+
+    server:
+        build: server
+        links:
+            - db
+        volumes:
+            - ./server:/usr/src/app/server
+        ports:
+            - "3000:3000"
+        command: ["./wait-for-it.sh", "db:5432", "--", "npm", "start"]
