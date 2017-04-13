@@ -1,21 +1,18 @@
 version: '2'
 
 services:
-
     db:
-        build: db
+        image: mdillon/postgis:9.5
         ports:
             - "5432:5432"
         environment:
-            POSTGRES_USER: simon
-            POSTGRES_USER: Wayla87091
-            POSTGRES_DB: nyc
-        volumes:
-            - ./db/sql:/docker-entrypoint-initdb.d/
+            - POSTGRES_USER=simon
+            - POSTGRES_PASSWORD=secret
+            - POSTGRES_DB=nyc
 
     server:
         build: server
-        links:
+        depends_on:
             - db
         volumes:
             - ./server:/usr/src/app/server

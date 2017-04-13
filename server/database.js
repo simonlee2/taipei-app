@@ -1,9 +1,11 @@
+require('dotenv').config({path: '../'});
+
 const database = require('knex')({
     client:'postgres',
     connection: {
-        host : 'localhost',
+        host : 'db',
         user : 'simon',
-        password : '*',
+        password : 'secret',
         database : 'nyc',
         charset : 'utf8'
     }
