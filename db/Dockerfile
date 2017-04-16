@@ -1,1 +1,1 @@
-FROM postgres:9.6-alpine
+FROM mdillon/postgis:9.5

@@ -1,7 +1,7 @@
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
-const knex = require('./database');
+const knex = require('../server/database');
 
 const getContent = function(options) {
   // return new pending promise
