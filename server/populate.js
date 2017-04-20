@@ -1,7 +1,8 @@
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
-const knex = require('.database');
+const knex = require('./database');
+const path = require('path').resolve(__dirname, 'cafes.csv');
 
 const getContent = function(options) {
   // return new pending promise
@@ -62,7 +63,7 @@ function maybeToNull(json) {
 };
 
 function copyCafe() {
-    const query = "copy cafes (uuid, name, city, wifi, seat, quiet, tasty, cheap, music, url, address, limited_time, socket, standing_desk, latitude, longitude, point) from '/Users/simon/Dev/taipei-app/server/cafes.csv' delimiters '\t' csv header;";
+    const query = "copy cafes (uuid, name, city, wifi, seat, quiet, tasty, cheap, music, url, address, limited_time, socket, standing_desk, latitude, longitude, point) from '" + path + "' delimiters '\t' csv header;";
     return knex.raw(query);
 };
 
@@ -88,9 +89,11 @@ function toCSV(json, columns, delimiter="\t") {
 };
 
 function writeFilePromise(file, data, options={encoding:'utf8',mode:0o666,flag:'w'}) {
+  console.log("write to " + file);
   return new Promise((resolve, reject) => {
       fs.writeFile(file, data, options, (err) => {
         if (err) {
+          console.log(err);
           reject(err);
         }
         resolve();
@@ -101,13 +104,15 @@ function writeFilePromise(file, data, options={encoding:'utf8',mode:0o666,flag:'
 getJSON(cafeOptions)
   .then((json) => generatePoint(json))
   .then((json) => toCSV(json, cafeColumns))
-  .then((csv) => writeFilePromise('cafes.csv', csv))
+  .then((csv) => writeFilePromise(path, csv))
   .then(() => copyCafe())
   .then((resp) => {
     console.log(resp);
     knex.destroy();
+    process.exit(0);
   })
   .catch((err) => {
     console.log(err);
     knex.destroy();
+    process.exit(1);
   });

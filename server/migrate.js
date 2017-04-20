@@ -61,4 +61,5 @@ createTables()
 })
 .catch(function (error) {
   throw error;
+  process.exit(1);
 });
