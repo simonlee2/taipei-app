@@ -1,4 +1,4 @@
-var knex = require('../server/database');
+var knex = require('./database');
 var Schema = require('./schema');
 
 function createTable(tableName) {

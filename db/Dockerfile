@@ -76,6 +76,14 @@ RUN ln -s /usr/local/bin/docker-entrypoint.sh / # backwards compat \
 
 COPY ./initdb-postgis.sh /docker-entrypoint-initdb.d/postgis.sh
 COPY ./update-postgis.sh /usr/local/bin
+COPY ./initdb.sh /docker-entrypoint-initdb.d/initdb.sh
+
+RUN mkdir /js
+COPY ./migrate.js /js
+COPY ./schema.js /js
+COPY ./populate.js /js
+COPY ./database.js /js
+COPY ./package.json /js
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 EXPOSE 5432

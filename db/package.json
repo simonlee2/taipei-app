@@ -1,0 +1,11 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "knex": "^0.12.9",
+    "knex-postgis": "^0.2.1"
+  }
+}
