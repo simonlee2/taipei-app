@@ -9,6 +9,8 @@ services:
             - POSTGRES_USER=simon
             - POSTGRES_PASSWORD=secret
             - POSTGRES_DB=nyc
+        volumes:
+          - data:/usr/src/data
 
     server:
         build: server
@@ -16,6 +18,10 @@ services:
             - db
         volumes:
             - ./server:/usr/src/app/server
+            - data:/usr/src/data
         ports:
             - "3000:3000"
         command: ["./wait-for-it.sh", "db:5432", "--", "npm", "start"]
+
+volumes:
+    data: {}

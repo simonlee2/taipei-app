@@ -2,7 +2,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const knex = require('./database');
-const path = require('path').resolve(__dirname, 'cafes.csv');
+const path = require('path').resolve(__dirname, 'data/cafes.csv');
 
 const getContent = function(options) {
   // return new pending promise
@@ -63,6 +63,7 @@ function maybeToNull(json) {
 };
 
 function copyCafe() {
+    console.log(`csv path: ${path}`);
     const query = "copy cafes (uuid, name, city, wifi, seat, quiet, tasty, cheap, music, url, address, limited_time, socket, standing_desk, latitude, longitude, point) from '" + path + "' delimiters '\t' csv header;";
     return knex.raw(query);
 };
