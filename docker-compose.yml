@@ -20,7 +20,7 @@ services:
             - data:/usr/src/data
         ports:
             - "3000:3000"
-        command: ["./wait-for-it.sh", "db:5432", "--", "npm", "start"]
+        command: ["./wait-for-it.sh", "-t", "60`", "db:5432", "--", "npm", "start"]
 
 volumes:
     data: {}
