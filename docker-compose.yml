@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+    db:
+        image: mdillon/postgis
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=simon
+            - POSTGRES_PASSWORD=secret
+            - POSTGRES_DB=nyc
+        volumes:
+          - data:/usr/src/data
+
+    server:
+        build: server
+        depends_on:
+            - db
+        volumes:
+            - data:/usr/src/data
+        ports:
+            - "3000:3000"
+        command: ["./wait-for-it.sh", "-t", "60`", "db:5432", "--", "npm", "start"]
+
+volumes:
+    data: {}
