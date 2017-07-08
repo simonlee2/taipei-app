@@ -3,6 +3,7 @@ var router = express.Router();
 var util = require('../util');
 var knex = require('../database');
 var st = require('knex-postgis')(knex);
+const tableName = 'cafes';
 
 function query(tableName, parameters) {
   // Return all cafes if no location to query
@@ -35,8 +36,13 @@ function query(tableName, parameters) {
   .limit(limit);
 }
 
-function getWithQuery(tableName) {
+function searchWithLocation(tableName) {
   return (req, res, next) => {
+    if (req.query.location === undefined) {
+      next();
+      return
+    }
+
     let parameters = {
       location: req.query.location,
       radius: req.query.radius,
@@ -54,9 +60,42 @@ function getWithQuery(tableName) {
   }
 }
 
+function searchWithBounds(tableName) {
+  return (req, res, next) => {
+    if (req.query.bounds === undefined) {
+      next();
+      return
+    }
+  }
+}
+
+function all(tableName) {
+  return (req, res, next) => {
+    console.log('all');
+    knex.select('*').from(tableName)
+      .then((data) => util.dbGeoParse(data))
+      .then((output) => {
+        res.send(output);
+      })
+      .catch((err) => {
+        res.send(err);
+      })
+  }
+}
+
+/*
+ * if no parameters at all, return everything
+ * if location is included, query using geographic coordinate
+ * if bounds is included, query using bounding coorindates
+ */
+
 /*
   Endpoint
 */
-router.get('/', getWithQuery('cafes'));
+router.get('/',
+  searchWithLocation(tableName),
+  searchWithBounds(tableName),
+  all(tableName)
+);
 
 module.exports = router;
