@@ -10,7 +10,14 @@ function pointParamValid(paramString) {
 function pointFromParam(paramString) {
   // paramString = @{lat},{long}
   let regex = /[-\d.]+/gi;
-  return paramString.match(regex);
+  let matches = paramString.match(regex);
+
+  if (matches.length != 2) {
+    console.log(matches);
+    throw `Invalid point parameter ${paramString}`;
+  }
+
+  return matches;
 };
 
 function dbGeoParse(data) {

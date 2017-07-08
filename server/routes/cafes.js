@@ -60,12 +60,41 @@ function searchWithLocation(tableName) {
   }
 }
 
+/*
+
+select name, point
+from cafes
+where ST_Contains(
+  ST_MakeEnvelope(121.544019, 25.051781, 121.557718, 25.041365, 4326),
+  point
+  );
+
+  */
 function searchWithBounds(tableName) {
   return (req, res, next) => {
-    if (req.query.bounds === undefined) {
+    console.log(req.query.sw, req.query.ne);
+    if (req.query.sw === undefined || req.query.ne === undefined) {
+      console.log("what");
       next();
       return
     }
+
+
+  console.log("hmm");
+  [swLat, swLng] = util.pointFromParam(req.query.sw);
+  [neLat, neLng] = util.pointFromParam(req.query.ne);
+  console.log(swLat, swLng, neLat, neLng);
+  var envelope = st.makeEnvelope(swLng, swLat, neLng, neLat, 4326);
+
+  return knex.select('*').from(tableName)
+    .whereRaw(`ST_Contains(${envelope}, point)`)
+    .then((data) => util.dbGeoParse(data))
+    .then((output) => {
+      res.send(output);
+    })
+    .catch((err) => {
+      res.send(err);
+    })
   }
 }
 
